@@ -3,6 +3,12 @@
 #![register_tool(c2rust)]
 #![feature(c_variadic, const_raw_ptr_to_usize_cast, extern_types, main,
            ptr_wrapping_offset_from, register_tool)]
+
+use std::env;
+use std::process;
+use std::collections::HashSet;
+
+
 extern "C" {
     pub type lws_sequencer;
     pub type sockaddr_x25;
@@ -3252,8 +3258,7 @@ pub unsafe extern "C" fn irc__process(mut s: *mut t_sess,
 static mut doc_usage: *const libc::c_char =
     b"Usage: %s [options] <RC server hostname>\nOptions:\n\t-h\tshows this help\n\t-d\tincreases logging verbosity, can be used repeatedly\n\t-l\tIRC listen port (%d)\n\t-p\tRC server port (%d)\n\n\x00"
         as *const u8 as *const libc::c_char;
-unsafe fn main_0(mut argc: libc::c_int, mut argv: *mut *mut libc::c_char)
- -> libc::c_int {
+fn main_0(args: HashSet<String>) -> i32 {
     let mut info: lws_context_creation_info =
         lws_context_creation_info{port: 0,
                                   iface: 0 as *const libc::c_char,
@@ -3692,16 +3697,8 @@ unsafe fn main_0(mut argc: libc::c_int, mut argv: *mut *mut libc::c_char)
          b"Completed\n\x00" as *const u8 as *const libc::c_char);
     return 0 as libc::c_int;
 }
-#[main]
+
 pub fn main() {
-    let mut args: Vec<*mut libc::c_char> = Vec::new();
-    for arg in ::std::env::args() {
-        args.push(::std::ffi::CString::new(arg).expect("Failed to convert argument into CString.").into_raw());
-    };
-    args.push(::std::ptr::null_mut());
-    unsafe {
-        ::std::process::exit(main_0((args.len() - 1) as libc::c_int,
-                                    args.as_mut_ptr() as
-                                        *mut *mut libc::c_char) as i32)
-    }
+    let args: HashSet<String> = env::args().collect();
+    process::exit(main_0(args) as i32)
 }
